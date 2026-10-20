@@ -113,7 +113,7 @@
 <div class="overlay" id="startOverlay">
   <div class="dialog">
     <h2>Mula ujian?</h2>
-    <p>10 soalan · 10 markah · <span id="durationText"></span> minit. Masa mula dikira sebaik sahaja anda tekan Mula. Jawapan hanya ditunjukkan selepas anda hantar.</p>
+    <p>9 soalan · 9 markah ·<span id="durationText"></span> minit. Masa mula dikira sebaik sahaja anda tekan Mula. Jawapan hanya ditunjukkan selepas anda hantar.</p>
     <label for="stuName">Nama penuh</label>
     <input id="stuName" autocomplete="name" placeholder="cth. Nur Aisyah binti Ahmad">
     <label for="stuClass">Kelas</label>
@@ -140,7 +140,7 @@
   <main class="paper" id="paper">
     <div class="result" id="result">
       <div>Markah anda</div>
-      <div class="score" id="scoreBig">0 / 10</div>
+      <div class="score" id="scoreBig">0 / 9</div>
       <div class="parts" id="scoreParts"></div>
       <div class="sync" id="syncMsg"></div>
     </div>
@@ -149,18 +149,18 @@
       <p><strong>Asas Sains Komputer</strong></p>
       <p>Ujian: Menulis Output Kod Arahan</p>
       <h1>Struktur Kawalan</h1>
-      <p>Tingkatan 2 · Python dan Pseudokod · 10 markah</p>
+      <p>Tingkatan 2 · Python dan Pseudokod · 9 markah</p>
       <div class="student">
         <div><span>Nama</span><b id="showName">&nbsp;</b></div>
         <div><span>Kelas</span><b id="showClass">&nbsp;</b></div>
         <div><span>Tarikh</span><b id="showDate">&nbsp;</b></div>
-        <div><span>Markah</span><b id="showMarks">&nbsp;&nbsp;&nbsp;/ 10</b></div>
+        <div><span>Markah</span><b id="showMarks">&nbsp;&nbsp;&nbsp;/ 9</b></div>
       </div>
     </div>
 
     <ol class="rules">
       <li>Baca setiap kod arahan atau pseudokod, kemudian <b>taip output</b> yang akan dipaparkan.</li>
-      <li>Tulis <b>satu baris output pada satu baris</b> dalam kotak jawapan (tekan Enter untuk baris baharu).</li>
+      <li>Sebaiknya tulis <b>satu baris output pada satu baris</b> (tekan Enter untuk baris baharu). Jawapan sebaris seperti <code>1 2 3</code> atau <code>1, 2, 3</code> juga diterima.</li>
       <li>Tulis hanya apa yang dipaparkan oleh <code>print()</code> atau <b>Papar</b>. Teks arahan dalam <code>input()</code> tidak perlu ditulis.</li>
       <li>Huruf besar dan huruf kecil mesti tepat. Ruang kosong berlebihan tidak dikira salah.</li>
     </ol>
@@ -179,7 +179,7 @@
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbysgfQgJbcMjqJ_lC2rf1r1cLYMVbS82M90FGVIYsDLZG3Uj81fEWREH1pcr4QXd_ti0A/exec";
 
 const EXAM_ID = "T2-ASK-OUTPUT-1";   // dipaparkan dalam Google Sheet
-const DURATION_MIN = 60;             // masa keseluruhan (minit)
+const DURATION_MIN = 90;             // masa keseluruhan (minit)
 const CLASSES = ["2 Amanah", "2 Berdikari", "2 Cekal", "2 Dedikasi", "2 Gemilang", "2 Harmoni", "2 Ikhlas", "2 Rasional"];
 
 /* ====================== SOALAN ====================== */
@@ -283,17 +283,6 @@ while n <= 6:
     why: "Gelung berulang untuk n = 1 hingga 6. n % 2 == 0 hanya BENAR apabila n nombor genap (2, 4, 6)."
   },
   {
-    sec: "C", topic: "for", lang: "Pseudokod", input: null,
-    code:
-`1. Mula
-2. Untuk i = 1 hingga 4
-   2.1 Papar i × 3
-3. Tamat untuk
-4. Tamat`,
-    answer: ["3", "6", "9", "12"],
-    why: "i mengambil nilai 1, 2, 3, 4. Setiap kali, i × 3 dipaparkan: 3, 6, 9, 12."
-  },
-  {
     sec: "C", topic: "for", lang: "Python", input: null,
     code:
 `for i in range(1, 6):
@@ -387,12 +376,17 @@ document.addEventListener("input", e => {
   $("b" + n).classList.toggle("answered", e.target.value.trim() !== "");
 });
 
-// Penandaan: buang baris kosong, abaikan semua ruang kosong, huruf besar/kecil mesti tepat
+// Penandaan: huruf besar/kecil mesti tepat. Diterima jika
+// (1) setiap baris sama (ruang kosong diabaikan), atau
+// (2) susunan perkataan/nombor sama walaupun ditulis sebaris atau dipisah koma, cth. "1 2 3" atau "1, 2, 3".
 const lines = s => s.replace(/\r/g, "").split("\n").map(l => l.trim()).filter(l => l !== "");
 const squash = l => l.replace(/[\s ]+/g, "").replace(/[“”]/g, '"');
+const tokens = s => s.replace(/[“”]/g, '"').match(/[A-Za-z0-9_]+|[^\sA-Za-z0-9_,]/g) || [];
 function isCorrect(typed, answer) {
   const a = lines(typed).map(squash), b = answer.map(squash);
-  return a.length === b.length && a.every((x, i) => x === b[i]);
+  if (a.length === b.length && a.every((x, i) => x === b[i])) return true;
+  const ta = tokens(typed), tb = tokens(answer.join("\n"));
+  return ta.length > 0 && ta.length === tb.length && ta.every((x, i) => x === tb[i]);
 }
 
 // Mula
