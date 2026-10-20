@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ujian ASK Tingkatan 2</title>
+<style>
+  :root {
+    --navy: #1f3a8a; --navy-soft: #e8edfb; --ink: #1c2333; --muted: #5b6475;
+    --line: #d7dce6; --bg: #f3f5f9; --paper: #ffffff;
+    --ok: #15803d; --ok-bg: #e7f6ec; --bad: #b91c1c; --bad-bg: #fdecec;
+    --code-bg: #1e2433; --code-ink: #e6e9f0;
+    --mono: Consolas, "Cascadia Mono", "Courier New", monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+         color: var(--ink); background: var(--bg); line-height: 1.5; }
+  button { font: inherit; cursor: pointer; }
+
+  /* Top bar */
+  .topbar { position: sticky; top: 0; z-index: 20; background: var(--paper); border-bottom: 2px solid var(--navy);
+            display: flex; align-items: center; gap: 12px; padding: 10px 16px; flex-wrap: wrap; }
+  .brand { font-weight: 700; color: var(--navy); margin-right: auto; }
+  .timer { font-variant-numeric: tabular-nums; font-weight: 700; padding: 4px 10px; border-radius: 6px; background: var(--navy-soft); color: var(--navy); }
+  .timer.low { background: var(--bad-bg); color: var(--bad); }
+  .btn { border: 1px solid var(--navy); background: var(--navy); color: #fff; padding: 8px 16px; border-radius: 8px; font-weight: 600; }
+  .btn.ghost { background: #fff; color: var(--navy); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* Layout */
+  .layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 20px; max-width: 1100px; margin: 20px auto; padding: 0 16px; }
+  .sheet { position: sticky; top: 70px; align-self: start; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+  .sheet h3 { margin: 0 0 8px; font-size: 15px; color: var(--navy); }
+  .sheet .grp { font-size: 13px; color: var(--muted); margin: 10px 0 6px; }
+  .bubbles { display: flex; flex-wrap: wrap; gap: 6px; }
+  .bubble { width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--line); background: #fff;
+            font-size: 13px; display: grid; place-items: center; color: var(--ink); }
+  .bubble.answered { background: var(--navy); border-color: var(--navy); color: #fff; }
+  .bubble.right { background: var(--ok); border-color: var(--ok); color: #fff; }
+  .bubble.wrong { background: var(--bad); border-color: var(--bad); color: #fff; }
+
+  .paper { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 28px clamp(16px, 4vw, 48px); }
+  .cover { text-align: center; border-bottom: 1px solid var(--line); padding-bottom: 18px; margin-bottom: 20px; }
+  .cover h1 { margin: 6px 0; color: var(--navy); font-size: 30px; }
+  .cover p { margin: 2px 0; color: var(--muted); }
+  .student { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px; text-align: left; margin-top: 16px; }
+  .student div { border-bottom: 1px solid var(--ink); padding: 4px 0; font-size: 15px; }
+  .student span { color: var(--muted); font-size: 13px; display: block; }
+
+  .rules { background: var(--navy-soft); border-radius: 10px; padding: 12px 16px 12px 34px; margin: 0 0 10px; font-size: 15px; }
+  .rules li { margin: 3px 0; }
+
+  .part-head { display: flex; justify-content: space-between; align-items: baseline; margin: 30px 0 4px; border-bottom: 2px solid var(--navy); gap: 10px; }
+  .part-head h2 { margin: 0; color: var(--navy); font-size: 21px; }
+
+  .q { border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin: 14px 0; scroll-margin-top: 80px; }
+  .q.right { border-color: var(--ok); background: var(--ok-bg); }
+  .q.wrong { border-color: var(--bad); background: var(--bad-bg); }
+  .qtop { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .qnum { background: var(--navy); color: #fff; border-radius: 6px; padding: 0 9px; font-weight: 700; }
+  .tag { font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 99px; border: 1px solid var(--line); background: #fff; color: var(--muted); }
+  .tag.py { color: #1d4ed8; border-color: #bcd0f7; }
+  .tag.ps { color: #7c3aed; border-color: #dccbfb; }
+
+  pre.code { background: var(--code-bg); color: var(--code-ink); font-family: var(--mono); font-size: 15px; line-height: 1.6;
+             padding: 14px 16px; border-radius: 8px; overflow-x: auto; margin: 0 0 10px; }
+  .kw { color: #f59ec4; } .fn { color: #7dd3fc; } .str { color: #bef264; } .num { color: #fdba74; } .ln { color: #8b93a7; }
+  .stem { font-weight: 600; margin: 8px 0; }
+  .stem .inp { font-family: var(--mono); background: #fff3c4; padding: 0 6px; border-radius: 4px; }
+
+  textarea.ans { width: 100%; min-height: 110px; font-family: var(--mono); font-size: 15px; line-height: 1.6;
+                 padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 8px; resize: vertical; background: #fff; }
+  textarea.ans:focus { outline: none; border-color: var(--navy); box-shadow: 0 0 0 3px var(--navy-soft); }
+
+  .feedback { margin-top: 10px; font-size: 14px; padding: 10px 12px; border-radius: 6px; background: #fff; border-left: 4px solid var(--ok); }
+  .q.wrong .feedback { border-left-color: var(--bad); }
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0; }
+  .compare div > span { font-size: 12px; color: var(--muted); display: block; }
+  .compare pre { margin: 2px 0 0; font-family: var(--mono); font-size: 14px; background: #f7f8fb; border: 1px solid var(--line);
+                 border-radius: 6px; padding: 8px 10px; white-space: pre-wrap; word-break: break-word; }
+
+  .submit-row { text-align: center; margin: 30px 0 6px; }
+
+  /* Result banner */
+  .result { display: none; border: 2px solid var(--navy); border-radius: 12px; padding: 20px; margin-bottom: 22px; text-align: center; background: var(--navy-soft); }
+  .result.show { display: block; }
+  .result .score { font-size: 44px; font-weight: 800; color: var(--navy); }
+  .result .parts { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; color: var(--muted); }
+  .sync { margin-top: 10px; font-size: 14px; }
+
+  /* Start dialog */
+  .overlay { position: fixed; inset: 0; background: rgba(20, 28, 48, .55); display: grid; place-items: center; z-index: 50; padding: 16px; }
+  .overlay.hide { display: none; }
+  .dialog { background: #fff; border-radius: 14px; padding: 26px; width: min(440px, 100%); }
+  .dialog h2 { margin: 0 0 4px; color: var(--navy); }
+  .dialog p { color: var(--muted); margin: 0 0 16px; }
+  .dialog label { display: block; font-size: 14px; font-weight: 600; margin: 12px 0 4px; }
+  .dialog input, .dialog select { width: 100%; font: inherit; padding: 10px; border: 1px solid var(--line); border-radius: 8px; }
+  .dialog .err { color: var(--bad); font-size: 14px; min-height: 20px; margin-top: 8px; }
+  .dialog .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; }
+
+  @media (max-width: 760px) {
+    .layout { grid-template-columns: minmax(0, 1fr); }
+    .sheet { position: static; }
+    .student, .compare { grid-template-columns: 1fr; }
+    pre.code { font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Start dialog -->
+<div class="overlay" id="startOverlay">
+  <div class="dialog">
+    <h2>Mula ujian?</h2>
+    <p>10 soalan · 10 markah · <span id="durationText"></span> minit. Masa mula dikira sebaik sahaja anda tekan Mula. Jawapan hanya ditunjukkan selepas anda hantar.</p>
+    <label for="stuName">Nama penuh</label>
+    <input id="stuName" autocomplete="name" placeholder="cth. Nur Aisyah binti Ahmad">
+    <label for="stuClass">Kelas</label>
+    <select id="stuClass"></select>
+    <div class="err" id="startErr"></div>
+    <div class="actions">
+      <button class="btn" id="startBtn">Mula ujian</button>
+    </div>
+  </div>
+</div>
+
+<div class="topbar">
+  <div class="brand">Asas Sains Komputer T2 · Ujian Output Kod</div>
+  <div class="timer" id="timer">--:--</div>
+  <button class="btn" id="submitTop" disabled>Hantar jawapan</button>
+</div>
+
+<div class="layout">
+  <aside class="sheet">
+    <h3>Kertas jawapan</h3>
+    <div id="sheetGroups"></div>
+  </aside>
+
+  <main class="paper" id="paper">
+    <div class="result" id="result">
+      <div>Markah anda</div>
+      <div class="score" id="scoreBig">0 / 10</div>
+      <div class="parts" id="scoreParts"></div>
+      <div class="sync" id="syncMsg"></div>
+    </div>
+
+    <div class="cover">
+      <p><strong>Asas Sains Komputer</strong></p>
+      <p>Ujian: Menulis Output Kod Arahan</p>
+      <h1>Struktur Kawalan</h1>
+      <p>Tingkatan 2 · Python dan Pseudokod · 10 markah</p>
+      <div class="student">
+        <div><span>Nama</span><b id="showName">&nbsp;</b></div>
+        <div><span>Kelas</span><b id="showClass">&nbsp;</b></div>
+        <div><span>Tarikh</span><b id="showDate">&nbsp;</b></div>
+        <div><span>Markah</span><b id="showMarks">&nbsp;&nbsp;&nbsp;/ 10</b></div>
+      </div>
+    </div>
+
+    <ol class="rules">
+      <li>Baca setiap kod arahan atau pseudokod, kemudian <b>taip output</b> yang akan dipaparkan.</li>
+      <li>Tulis <b>satu baris output pada satu baris</b> dalam kotak jawapan (tekan Enter untuk baris baharu).</li>
+      <li>Tulis hanya apa yang dipaparkan oleh <code>print()</code> atau <b>Papar</b>. Teks arahan dalam <code>input()</code> tidak perlu ditulis.</li>
+      <li>Huruf besar dan huruf kecil mesti tepat. Ruang kosong berlebihan tidak dikira salah.</li>
+    </ol>
+
+    <div id="questions"></div>
+
+    <div class="submit-row"><button class="btn" id="submitBottom" disabled>Hantar jawapan</button></div>
+  </main>
+</div>
+
+<script>
+/* ====================== TETAPAN (ubah di sini) ====================== */
+
+// Tampal URL Web App Google Apps Script di sini (lihat README.md).
+// Biarkan kosong untuk menguji halaman tanpa menghantar keputusan.
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbysgfQgJbcMjqJ_lC2rf1r1cLYMVbS82M90FGVIYsDLZG3Uj81fEWREH1pcr4QXd_ti0A/exec";
+
+const EXAM_ID = "T2-ASK-OUTPUT-1";   // dipaparkan dalam Google Sheet
+const DURATION_MIN = 60;             // masa keseluruhan (minit)
+const CLASSES = ["2 Amanah", "2 Berdikari", "2 Cekal", "2 Dedikasi", "2 Gemilang", "2 Harmoni", "2 Ikhlas", "2 Rasional"];
+
+/* ====================== SOALAN ====================== */
+
+// sec: bahagian. lang: "Python" atau "Pseudokod". input: nilai yang dimasukkan pengguna (atau null).
+// answer: output yang betul, satu baris setiap item. why: penerangan selepas hantar.
+const SECTIONS = {
+  A: "Bahagian A: Struktur Kawalan Pilihan",
+  B: "Bahagian B: Struktur Kawalan Ulangan (while)",
+  C: "Bahagian C: Struktur Kawalan Ulangan (for)"
+};
+
+const QUESTIONS = [
+  {
+    sec: "A", topic: "Jujukan", lang: "Python", input: null,
+    code:
+`panjang = int(8)
+lebar = int(5)
+luas = panjang * lebar
+perimeter = 2 * (panjang + lebar)
+print("Luas:", luas)
+print("Perimeter:", perimeter)`,
+    answer: ["Luas: 40", "Perimeter: 26"],
+    why: "Arahan dilaksanakan satu demi satu dari atas ke bawah. luas = 8 × 5 = 40, perimeter = 2 × (8 + 5) = 26."
+  },
+  {
+    sec: "A", topic: "Dwipilihan", lang: "Pseudokod", input: "45",
+    code:
+`1. Mula
+2. Input markah
+3. Jika markah >= 50
+   3.1 Papar "LULUS"
+4. Jika tidak
+   4.1 Papar "GAGAL"
+5. Papar "Semakan tamat"
+6. Tamat`,
+    answer: ["GAGAL", "Semakan tamat"],
+    why: "45 >= 50 adalah PALSU, jadi bahagian 'Jika tidak' dilaksanakan dan GAGAL dipaparkan. Langkah 5 berada di luar struktur pilihan, jadi ia tetap dipaparkan."
+  },
+  {
+    sec: "A", topic: "Pelbagai pilihan", lang: "Python", input: "72",
+    code:
+`markah = int(input("Masukkan markah: "))
+if markah >= 80:
+    print("Gred A")
+elif markah >= 65:
+    print("Gred B")
+elif markah >= 50:
+    print("Gred C")
+else:
+    print("Gred D")`,
+    answer: ["Gred B"],
+    why: "72 >= 80 PALSU. 72 >= 65 BENAR, jadi Gred B dipaparkan. Selepas satu syarat BENAR, syarat yang lain tidak disemak lagi."
+  },
+  {
+    sec: "B", topic: "while", lang: "Pseudokod", input: null,
+    code:
+`1. Mula
+2. Set nombor = 1
+3. Selagi nombor <= 5
+   3.1 Papar nombor
+   3.2 nombor = nombor + 2
+4. Tamat selagi
+5. Tamat`,
+    answer: ["1", "3", "5"],
+    why: "nombor bermula dengan 1 dan bertambah 2 setiap ulangan: 1, 3, 5. Apabila nombor = 7, syarat 7 <= 5 PALSU dan ulangan berhenti."
+  },
+  {
+    sec: "B", topic: "while", lang: "Python", input: "10",
+    code:
+`kiraan = int(input("Masukkan nombor: "))
+while kiraan > 0:
+    print(kiraan)
+    kiraan = kiraan - 3
+print("Selesai")`,
+    answer: ["10", "7", "4", "1", "Selesai"],
+    why: "kiraan berkurang 3 setiap ulangan: 10, 7, 4, 1. Apabila kiraan = -2, syarat -2 > 0 PALSU. print(\"Selesai\") berada di luar gelung, jadi dipaparkan sekali sahaja."
+  },
+  {
+    sec: "B", topic: "while", lang: "Python", input: "4",
+    code:
+`had = int(input("Masukkan had: "))
+jumlah = int(0)
+i = int(1)
+while i <= had:
+    jumlah = jumlah + i
+    i = i + 1
+print("Jumlah =", jumlah)`,
+    answer: ["Jumlah = 10"],
+    why: "Gelung menambah 1 + 2 + 3 + 4 = 10. print() berada di luar gelung (tiada inden), jadi hanya satu baris dipaparkan."
+  },
+  {
+    sec: "B", topic: "while", lang: "Python", input: null,
+    code:
+`n = int(1)
+while n <= 6:
+    if n % 2 == 0:
+        print(n, "genap")
+    n = n + 1`,
+    answer: ["2 genap", "4 genap", "6 genap"],
+    why: "Gelung berulang untuk n = 1 hingga 6. n % 2 == 0 hanya BENAR apabila n nombor genap (2, 4, 6)."
+  },
+  {
+    sec: "C", topic: "for", lang: "Pseudokod", input: null,
+    code:
+`1. Mula
+2. Untuk i = 1 hingga 4
+   2.1 Papar i × 3
+3. Tamat untuk
+4. Tamat`,
+    answer: ["3", "6", "9", "12"],
+    why: "i mengambil nilai 1, 2, 3, 4. Setiap kali, i × 3 dipaparkan: 3, 6, 9, 12."
+  },
+  {
+    sec: "C", topic: "for", lang: "Python", input: null,
+    code:
+`for i in range(1, 6):
+    print(i)`,
+    answer: ["1", "2", "3", "4", "5"],
+    why: "range(1, 6) bermula pada 1 dan berhenti SEBELUM 6, jadi i = 1, 2, 3, 4, 5."
+  },
+  {
+    sec: "C", topic: "for", lang: "Python", input: "5",
+    code:
+`nombor = int(input("Masukkan nombor sifir: "))
+for i in range(1, 4):
+    print(nombor, "x", i, "=", nombor * i)`,
+    answer: ["5 x 1 = 5", "5 x 2 = 10", "5 x 3 = 15"],
+    why: "range(1, 4) memberi i = 1, 2, 3. Koma dalam print() meletakkan satu ruang di antara setiap nilai."
+  }
+];
+
+/* ====================== LOGIK UJIAN ====================== */
+
+const $ = id => document.getElementById(id);
+const TOTAL = QUESTIONS.length;
+let student = null, startTime = null, timerId = null, submitted = false;
+
+const escapeHtml = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+// Warna kod ringkas untuk Python dan pseudokod
+const PY_KW = /^(if|elif|else|while|for|in|and|or|not|True|False)$/;
+const PS_KW = /^(Mula|Tamat|Set|Input|Jika|tidak|Papar|Selagi|selagi|Untuk|untuk|hingga)$/;
+function highlight(code, lang) {
+  return code.split("\n").map(line => {
+    let out = "", rest = line;
+    if (lang === "Pseudokod") {
+      const m = rest.match(/^(\s*\d+(\.\d+)*\.?)(\s)/);
+      if (m) { out += `<span class="ln">${m[1]}</span>`; rest = rest.slice(m[1].length); }
+    }
+    const kw = lang === "Python" ? PY_KW : PS_KW;
+    rest.split(/("[^"]*"|\b\w+\b)/).forEach(tok => {
+      if (!tok) return;
+      if (tok[0] === '"') out += `<span class="str">${escapeHtml(tok)}</span>`;
+      else if (/^\d+$/.test(tok)) out += `<span class="num">${tok}</span>`;
+      else if (kw.test(tok)) out += `<span class="kw">${tok}</span>`;
+      else if (lang === "Python" && /^(print|input|int|range)$/.test(tok)) out += `<span class="fn">${tok}</span>`;
+      else out += escapeHtml(tok);
+    });
+    return out;
+  }).join("\n");
+}
+
+// Senarai kelas dan masa
+$("stuClass").innerHTML = '<option value="">Pilih kelas anda</option>' +
+  CLASSES.map(c => `<option>${c}</option>`).join("");
+$("durationText").textContent = DURATION_MIN;
+
+// Bina soalan
+let html = "", lastSec = "";
+QUESTIONS.forEach((q, i) => {
+  const n = i + 1;
+  if (q.sec !== lastSec) {
+    const count = QUESTIONS.filter(x => x.sec === q.sec).length;
+    html += `<div class="part-head"><h2>${SECTIONS[q.sec]}</h2><span>${count} markah</span></div>`;
+    lastSec = q.sec;
+  }
+  const stem = q.input
+    ? `Jika pengguna memasukkan <span class="inp">${escapeHtml(q.input)}</span>, apakah output yang dikeluarkan?`
+    : "Apakah output yang dikeluarkan?";
+  html += `<div class="q" id="q${n}">
+    <div class="qtop"><span class="qnum">${n}</span><span class="tag">${q.topic}</span>
+      <span class="tag ${q.lang === "Python" ? "py" : "ps"}">${q.lang}</span></div>
+    <pre class="code">${highlight(q.code, q.lang)}</pre>
+    <div class="stem">${stem}</div>
+    <textarea class="ans" id="a${n}" data-q="${n}" placeholder="Taip output di sini..." spellcheck="false" autocomplete="off" autocapitalize="off" disabled></textarea>
+    <div class="feedback" hidden></div></div>`;
+});
+$("questions").innerHTML = html;
+
+// Kertas jawapan (bulatan)
+$("sheetGroups").innerHTML = Object.keys(SECTIONS).map(s =>
+  `<div class="grp">${SECTIONS[s].split(":")[0]}</div><div class="bubbles">` +
+  QUESTIONS.map((q, i) => q.sec === s ? `<button class="bubble" id="b${i + 1}" data-go="${i + 1}">${i + 1}</button>` : "").join("") +
+  `</div>`).join("");
+document.querySelectorAll(".bubble").forEach(b => b.onclick = () => {
+  const n = b.dataset.go;
+  $("q" + n).scrollIntoView({ behavior: "smooth", block: "center" });
+  if (!submitted) setTimeout(() => $("a" + n).focus(), 300);
+});
+
+document.addEventListener("input", e => {
+  const n = e.target.dataset.q;
+  if (!n || submitted) return;
+  $("b" + n).classList.toggle("answered", e.target.value.trim() !== "");
+});
+
+// Penandaan: buang baris kosong, abaikan semua ruang kosong, huruf besar/kecil mesti tepat
+const lines = s => s.replace(/\r/g, "").split("\n").map(l => l.trim()).filter(l => l !== "");
+const squash = l => l.replace(/[\s ]+/g, "").replace(/[“”]/g, '"');
+function isCorrect(typed, answer) {
+  const a = lines(typed).map(squash), b = answer.map(squash);
+  return a.length === b.length && a.every((x, i) => x === b[i]);
+}
+
+// Mula
+$("startBtn").onclick = () => {
+  const name = $("stuName").value.trim(), cls = $("stuClass").value;
+  if (name.length < 3) return $("startErr").textContent = "Sila taip nama penuh anda.";
+  if (!cls) return $("startErr").textContent = "Sila pilih kelas anda.";
+  student = { name, cls };
+  startTime = Date.now();
+  $("startOverlay").classList.add("hide");
+  $("showName").textContent = name;
+  $("showClass").textContent = cls;
+  $("showDate").textContent = new Date().toLocaleDateString("en-GB");
+  document.querySelectorAll("textarea.ans").forEach(t => t.disabled = false);
+  $("submitTop").disabled = $("submitBottom").disabled = false;
+  tick(); timerId = setInterval(tick, 1000);
+  window.onbeforeunload = () => submitted ? undefined : "Jawapan anda akan hilang.";
+};
+
+function tick() {
+  const left = Math.max(0, DURATION_MIN * 60 - Math.floor((Date.now() - startTime) / 1000));
+  const m = String(Math.floor(left / 60)).padStart(2, "0"), s = String(left % 60).padStart(2, "0");
+  $("timer").textContent = `Masa tinggal ${m}:${s}`;
+  $("timer").classList.toggle("low", left <= 300);
+  if (left === 0) { alert("Masa tamat! Jawapan anda akan dihantar sekarang."); submit(true); }
+}
+
+// Hantar
+$("submitTop").onclick = $("submitBottom").onclick = () => submit(false);
+
+function submit(timeUp) {
+  if (submitted) return;
+  if (!timeUp) {
+    const blank = QUESTIONS.map((_, i) => i + 1).filter(n => $("a" + n).value.trim() === "");
+    const msg = blank.length
+      ? `Anda belum menjawab ${blank.length} soalan: ${blank.join(", ")}.\nHantar juga?`
+      : "Hantar jawapan sekarang? Anda tidak boleh mengubahnya selepas ini.";
+    if (!confirm(msg)) return;
+  }
+  submitted = true;
+  clearInterval(timerId);
+  window.onbeforeunload = null;
+  document.querySelectorAll("textarea.ans").forEach(t => t.disabled = true);
+  $("submitTop").disabled = $("submitBottom").disabled = true;
+
+  let total = 0; const bySec = {}, answers = [], marks = [];
+  QUESTIONS.forEach((q, i) => {
+    const n = i + 1, typed = $("a" + n).value, ok = isCorrect(typed, q.answer);
+    if (ok) total++;
+    bySec[q.sec] = (bySec[q.sec] || 0) + (ok ? 1 : 0);
+    answers.push(`${n}: ${lines(typed).join(" / ") || "-"}`);
+    marks.push(`${n}${ok ? "✔" : "✘"}`);
+    $("q" + n).classList.add(ok ? "right" : "wrong");
+    $("b" + n).className = "bubble " + (ok ? "right" : "wrong");
+    const fb = document.querySelector(`#q${n} .feedback`);
+    fb.hidden = false;
+    fb.innerHTML = `<b>${ok ? "✔ Betul." : (typed.trim() ? "✘ Salah." : "✘ Tidak dijawab.")}</b>
+      <div class="compare">
+        <div><span>Jawapan anda</span><pre>${escapeHtml(lines(typed).join("\n")) || "(kosong)"}</pre></div>
+        <div><span>Output sebenar</span><pre>${escapeHtml(q.answer.join("\n"))}</pre></div>
+      </div>${q.why}`;
+  });
+
+  const secs = Math.round((Date.now() - startTime) / 1000);
+  const used = `${Math.floor(secs / 60)} min ${secs % 60} s`;
+  $("scoreBig").textContent = `${total} / ${TOTAL}`;
+  $("scoreParts").innerHTML = Object.keys(SECTIONS).map(s =>
+    `<span>Bahagian ${s}: ${bySec[s] || 0} / ${QUESTIONS.filter(q => q.sec === s).length}</span>`).join("") +
+    `<span>Masa digunakan: ${used}</span>`;
+  $("showMarks").textContent = `${total} / ${TOTAL}`;
+  $("result").classList.add("show");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+
+  sendToSheet({
+    exam: EXAM_ID, name: student.name, cls: student.cls,
+    secA: bySec.A || 0, secB: bySec.B || 0, secC: bySec.C || 0,
+    total, outOf: TOTAL, percent: Math.round(total / TOTAL * 100),
+    timeUsed: used, timeUp: timeUp ? "ya" : "tidak",
+    marks: marks.join(" "), answers: answers.join(" | ")
+  });
+}
+
+// Hantar keputusan ke Google Sheets (simpan salinan dan cuba semula jika tiada internet)
+function sendToSheet(data) {
+  if (!SHEET_URL) { $("syncMsg").textContent = "(Mod ujian: Google Sheet belum disambungkan.)"; return; }
+  $("syncMsg").textContent = "Menghantar keputusan anda kepada guru…";
+  fetch(SHEET_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(data) })
+    .then(() => {
+      $("syncMsg").textContent = "✔ Keputusan anda telah dihantar kepada guru.";
+      try { localStorage.removeItem("pendingResultASK"); } catch (e) {}
+    })
+    .catch(() => {
+      try { localStorage.setItem("pendingResultASK", JSON.stringify(data)); } catch (e) {}
+      $("syncMsg").innerHTML = "⚠ Keputusan tidak dapat dihantar (tiada internet?). " +
+        "<button class='btn ghost' id='retry'>Cuba lagi</button>";
+      $("retry").onclick = () => sendToSheet(data);
+    });
+}
+
+// Jika keputusan sebelum ini gagal dihantar, cuba semula apabila halaman dibuka
+try {
+  const pending = localStorage.getItem("pendingResultASK");
+  if (pending && SHEET_URL) fetch(SHEET_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: pending })
+    .then(() => localStorage.removeItem("pendingResultASK")).catch(() => {});
+} catch (e) {}
+</script>
+</body>
+</html>
